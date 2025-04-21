@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Event Calendar | Eventra{% endblock %}
+
+{% block styles %}
+<!-- FullCalendar CSS -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.0/main.min.css" rel="stylesheet">
+<style>
+  #calendar {
+    max-width: 100%;
+    margin: 0 auto;
+    background-color: var(--card-bg);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .fc-event {
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  
+  .fc-day-today {
+    background-color: rgba(var(--bs-primary-rgb), 0.1) !important;
+  }
+  
+  .category-filter {
+    margin-bottom: 1rem;
+  }
+  
+  .category-filter .badge {
+    cursor: pointer;
+    margin: 0.2rem;
+    padding: 0.5rem 0.75rem;
+  }
+  
+  .category-filter .badge.active {
+    box-shadow: 0 0 0 2px white, 0 0 0 4px currentColor;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="mb-0">Event Calendar</h1>
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('new_event') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i> Create Event
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Filter by Category</h5>
+                <div class="category-filter">
+                    <span class="badge bg-primary active" data-category-id="all">All Categories</span>
+                    {% for category in categories %}
+                    <span class="badge" data-category-id="{{ category.id }}" style="background-color: {{ category.color }};">{{ category.name }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div id="calendar"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- FullCalendar JS -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.0/main.min.js"></script>
+<!-- Google Maps JS API -->
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}"></script>
+<!-- Calendar and Events JS -->
+<script src="{{ url_for('static', filename='js/calendar.js') }}"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initialize calendar with custom functionality
+    const calendarEl = document.getElementById('calendar');
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: 'dayGridMonth',
+      headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
+      },
+      events: function(info, successCallback, failureCallback) {
+        // Use the fetchEvents function from calendar.js
+        fetchEvents(info, successCallback, failureCallback);
+      },
+      eventTimeFormat: {
+        hour: '2-digit',
+        minute: '2-digit',
+        meridiem: 'short'
+      },
+      eventClick: function(info) {
+        // Navigate to event details
+        window.location.href = `{{ url_for('event', event_id='EVENT_ID') }}`.replace('EVENT_ID', info.event.id);
+      },
+      eventDidMount: function(info) {
+        // Add tooltip with event details
+        const eventEl = info.el;
+        const event = info.event;
+        
+        // Create tooltip content
+        const tooltip = document.createElement('div');
+        tooltip.className = 'fc-event-tooltip';
+        tooltip.innerHTML = `
+          <strong>${event.title}</strong>
+          <p><i class="fas fa-map-marker-alt"></i> ${event.extendedProps.location || 'No location'}</p>
+          <p><i class="fas fa-clock"></i> ${event.start ? event.start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''} - 
+          ${event.end ? event.end.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}</p>
+        `;
+        
+        // Add tooltip to event element
+        eventEl.title = event.title;
+        
+        // Add hover style
+        eventEl.addEventListener('mouseover', function() {
+          eventEl.style.cursor = 'pointer';
+        });
+      },
+      dayMaxEvents: true,
+      navLinks: true,
+      themeSystem: 'bootstrap'
+    });
+    
+    calendar.render();
+    
+    // Category filter functionality
+    const categoryFilters = document.querySelectorAll('.category-filter .badge');
+    categoryFilters.forEach(filter => {
+      filter.addEventListener('click', function() {
+        // Update active state
+        categoryFilters.forEach(f => f.classList.remove('active'));
+        this.classList.add('active');
+        
+        // Get selected category
+        const categoryId = this.getAttribute('data-category-id');
+        
+        // Reload events based on category
+        calendar.refetchEvents();
+      });
+    });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+
+{% block title %}{{ legend }} | Eventra{% endblock %}
+
+{% block styles %}
+<!-- Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+  .map-container {
+    height: 300px;
+    width: 100%;
+    margin-top: 10px;
+    border-radius: 5px;
+    overflow: hidden;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">{{ legend }}</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                {{ form.title.label(class="form-label") }}
+                                {% if form.title.errors %}
+                                    {{ form.title.label(class="form-control is-invalid") }}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.title.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    {{ form.title(class="form-control") }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                {{ form.category.label(class="form-label") }}
+                                {% if form.category.errors %}
+                                    {{ form.category(class="form-select is-invalid") }}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.category.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    {{ form.category(class="form-select") }}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label") }}
+                        {% if form.description.errors %}
+                            {{ form.description(class="form-control is-invalid", rows=5) }}
+                            <div class="invalid-feedback">
+                                {% for error in form.description.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.description(class="form-control", rows=5) }}
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.start_time.label(class="form-label") }}
+                                {% if form.start_time.errors %}
+                                    {{ form.start_time(class="form-control flatpickr-datetime is-invalid", placeholder="Select start date and time") }}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.start_time.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    {{ form.start_time(class="form-control flatpickr-datetime", placeholder="Select start date and time") }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.end_time.label(class="form-label") }}
+                                {% if form.end_time.errors %}
+                                    {{ form.end_time(class="form-control flatpickr-datetime is-invalid", placeholder="Select end date and time") }}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.end_time.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    {{ form.end_time(class="form-control flatpickr-datetime", placeholder="Select end date and time") }}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                {{ form.location.label(class="form-label") }}
+                                {% if form.location.errors %}
+                                    {{ form.location(class="form-control is-invalid") }}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.location.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    {{ form.location(class="form-control") }}
+                                {% endif %}
+                                <div class="form-text">Name of venue or location</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                {{ form.capacity.label(class="form-label") }}
+                                {% if form.capacity.errors %}
+                                    {{ form.capacity(class="form-control is-invalid") }}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.capacity.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    {{ form.capacity(class="form-control") }}
+                                {% endif %}
+                                <div class="form-text">Leave empty for unlimited</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.address.label(class="form-label") }}
+                        {% if form.address.errors %}
+                            {{ form.address(class="form-control is-invalid", id="event-address") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.address.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.address(class="form-control", id="event-address") }}
+                        {% endif %}
+                    </div>
+
+                    <!-- Hidden geo fields -->
+                    <div class="row d-none">
+                        <div class="col-md-6">
+                            {{ form.latitude(id="event-lat") }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.longitude(id="event-lng") }}
+                        </div>
+                    </div>
+
+                    <div class="map-container" id="map"></div>
+
+                    <div class="mb-3 mt-3">
+                        {{ form.image.label(class="form-label") }}
+                        {{ form.image(class="form-control") }}
+                        {% if form.image.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.image.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">Upload an image for your event (optional)</div>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        {{ form.is_private(class="form-check-input") }}
+                        {{ form.is_private.label(class="form-check-label") }}
+                        <div class="form-text">Private events are only visible to registered attendees</div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('home') }}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<!-- Google Maps JS API -->
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=places"></script>
+<script src="{{ url_for('static', filename='js/maps.js') }}"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initialize flatpickr datetime pickers
+    flatpickr(".flatpickr-datetime", {
+      enableTime: true,
+      dateFormat: "Y-m-d H:i",
+      time_24hr: true,
+      minDate: "today",
+      allowInput: true,
+      clickOpens: true,
+      defaultHour: new Date().getHours(),
+      defaultMinute: new Date().getMinutes(),
+      minuteIncrement: 15
+    });
+    
+    // Initialize map with default location (can be your city center)
+    const defaultLat = 40.7128; // Default to NYC
+    const defaultLng = -74.0060;
+    
+    // Create map instance
+    const mapElement = document.getElementById('map');
+    const mapOptions = {
+      center: { lat: defaultLat, lng: defaultLng },
+      zoom: 13,
+      mapTypeControl: false,
+      fullscreenControl: true,
+      streetViewControl: false,
+      zoomControl: true
+    };
+    
+    const map = new google.maps.Map(mapElement, mapOptions);
+    
+    // Create marker for location selection
+    const marker = new google.maps.Marker({
+      position: { lat: defaultLat, lng: defaultLng },
+      map: map,
+      draggable: true,
+      animation: google.maps.Animation.DROP
+    });
+    
+    // Update lat/lng fields when marker is dragged
+    google.maps.event.addListener(marker, 'dragend', function() {
+      const position = marker.getPosition();
+      document.getElementById('event-lat').value = position.lat();
+      document.getElementById('event-lng').value = position.lng();
+    });
+    
+    // Initialize autocomplete for address input
+    const addressInput = document.getElementById('event-address');
+    const latInput = document.getElementById('event-lat');
+    const lngInput = document.getElementById('event-lng');
+    
+    // Check if we have existing coordinates (for edit mode)
+    if (latInput.value && lngInput.value) {
+      const lat = parseFloat(latInput.value);
+      const lng = parseFloat(lngInput.value);
+      marker.setPosition({ lat, lng });
+      map.setCenter({ lat, lng });
+    }
+    
+    // Initialize Google Places Autocomplete
+    const autocomplete = new google.maps.places.Autocomplete(addressInput);
+    autocomplete.bindTo('bounds', map);
+    
+    // When a place is selected, update the map and form fields
+    autocomplete.addListener('place_changed', function() {
+      const place = autocomplete.getPlace();
+      
+      if (!place.geometry || !place.geometry.location) {
+        console.warn("Autocomplete's returned place contains no geometry");
+        return;
+      }
+      
+      // If the place has a geometry, then update the map
+      if (place.geometry.viewport) {
+        map.fitBounds(place.geometry.viewport);
+      } else {
+        map.setCenter(place.geometry.location);
+        map.setZoom(17);
+      }
+      
+      // Update marker position
+      marker.setPosition(place.geometry.location);
+      
+      // Update form fields
+      latInput.value = place.geometry.location.lat();
+      lngInput.value = place.geometry.location.lng();
+    });
+  });
+</script>
+{% endblock %}

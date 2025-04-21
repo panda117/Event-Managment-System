@@ -1,0 +1,219 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Reports | Eventra Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Reports</h1>
+    </div>
+
+    <!-- Reports Row -->
+    <div class="row">
+        <!-- Platform Activity Report Card -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Platform Activity</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="activityChart"></canvas>
+                    </div>
+                    <hr>
+                    <p class="text-center mt-3">
+                        This chart shows new users and events created over the last 30 days.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Category Distribution Report Card -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Event Categories Distribution</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                    <hr>
+                    <p class="text-center mt-3">
+                        This chart shows the distribution of events across different categories.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reports Row -->
+    <div class="row">
+        <!-- User Registration Report Card -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">User Registration Trends</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="userRegistrationChart"></canvas>
+                    </div>
+                    <hr>
+                    <p class="text-center mt-3">
+                        This chart shows user registration patterns over the last 6 months.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Event Attendance Report Card -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Event Attendance</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-bar">
+                        <canvas id="attendanceChart"></canvas>
+                    </div>
+                    <hr>
+                    <p class="text-center mt-3">
+                        This chart shows average attendance rates for events by category.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Note -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Report Information</h6>
+        </div>
+        <div class="card-body">
+            <p>
+                These reports provide insights into platform usage and activity. More detailed analytics could 
+                be implemented in the future, including:
+            </p>
+            <ul>
+                <li>User engagement metrics</li>
+                <li>Geographic distribution of events and users</li>
+                <li>Popular event times and locations</li>
+                <li>User retention analysis</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Initialize chart data
+    document.addEventListener('DOMContentLoaded', function() {
+        // Sample data for demonstration purposes
+        // Activity Chart
+        const activityCtx = document.getElementById('activityChart').getContext('2d');
+        const activityChart = new Chart(activityCtx, {
+            type: 'line',
+            data: {
+                labels: [...Array(30).keys()].map(i => `Day ${i+1}`),
+                datasets: [
+                    {
+                        label: 'New Users',
+                        data: Array.from({length: 30}, () => Math.floor(Math.random() * 10)),
+                        borderColor: '#4e73df',
+                        backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                        tension: 0.3,
+                        fill: true
+                    },
+                    {
+                        label: 'New Events',
+                        data: Array.from({length: 30}, () => Math.floor(Math.random() * 15)),
+                        borderColor: '#1cc88a',
+                        backgroundColor: 'rgba(28, 200, 138, 0.05)',
+                        tension: 0.3,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                maintainAspectRatio: false,
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    }
+                }
+            }
+        });
+        
+        // Category Chart
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        const categoryChart = new Chart(categoryCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Conference', 'Workshop', 'Social', 'Concert', 'Sports', 'Community', 'Other'],
+                datasets: [{
+                    data: [12, 19, 8, 15, 10, 6, 3],
+                    backgroundColor: [
+                        '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796', '#5a5c69'
+                    ]
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                responsive: true
+            }
+        });
+        
+        // User Registration Chart
+        const userRegCtx = document.getElementById('userRegistrationChart').getContext('2d');
+        const userRegChart = new Chart(userRegCtx, {
+            type: 'line',
+            data: {
+                labels: ['January', 'February', 'March', 'April', 'May', 'June'],
+                datasets: [{
+                    label: 'New Users',
+                    data: [65, 59, 80, 81, 56, 55],
+                    borderColor: '#4e73df',
+                    tension: 0.3,
+                    fill: false
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                responsive: true
+            }
+        });
+        
+        // Attendance Chart
+        const attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
+        const attendanceChart = new Chart(attendanceCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Conference', 'Workshop', 'Social', 'Concert', 'Sports', 'Community', 'Other'],
+                datasets: [{
+                    label: 'Avg. Attendance Rate (%)',
+                    data: [75, 82, 90, 95, 88, 65, 70],
+                    backgroundColor: [
+                        '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796', '#5a5c69'
+                    ]
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

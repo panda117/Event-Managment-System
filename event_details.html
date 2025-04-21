@@ -1,0 +1,348 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ event.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    #map {
+        height: 300px;
+        width: 100%;
+        border-radius: 0.25rem;
+    }
+    .event-category-tag {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Event Details</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="event-category-tag me-2" style="background-color: {{ event.color }}"></div>
+                        <h1 class="mb-0">{{ event.title }}</h1>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <span class="badge" style="background-color: {{ event.color }}">{{ event.category|capitalize }}</span>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h5>Description</h5>
+                        <p>{{ event.description }}</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h5>Date & Time</h5>
+                        <p>
+                            <i class="fas fa-calendar-day me-2"></i>
+                            {% set start_date = event.start|string|replace('T', ' ')|string %}
+                            {% set end_date = event.end|string|replace('T', ' ')|string %}
+                            {{ start_date[:16]|string }} to {{ end_date[:16]|string }}
+                        </p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h5>Location</h5>
+                        <p>
+                            <i class="fas fa-map-marker-alt me-2"></i>
+                            {{ event.location }}<br>
+                            <small class="text-muted">{{ event.address }}</small>
+                        </p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h5>Map</h5>
+                        <div id="map"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Registration</h5>
+                    
+                    <p class="mb-3">
+                        <i class="fas fa-users me-2"></i>
+                        <span id="registration-count">{{ registration_count }}</span> registered
+                        {% if event.max_participants > 0 %}
+                        <span class="text-muted">/ {{ event.max_participants }} max</span>
+                        {% endif %}
+                    </p>
+                    
+                    {% if session.user_id %}
+                        {% if registered %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i> You're registered for this event!
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button id="unregister-btn" class="btn btn-outline-danger" data-event-id="{{ event.id }}">
+                                Unregister
+                            </button>
+                            <button id="view-pass-btn" class="btn btn-primary" data-event-id="{{ event.id }}">
+                                <i class="fas fa-ticket-alt me-2"></i> View Event Pass
+                            </button>
+                        </div>
+                        {% else %}
+                            {% if event.max_participants > 0 and registration_count >= event.max_participants %}
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i> This event is full
+                            </div>
+                            <div class="d-grid">
+                                <button class="btn btn-primary" disabled>Register</button>
+                            </div>
+                            {% else %}
+                            <div class="d-grid">
+                                <button id="register-btn" class="btn btn-primary" data-event-id="{{ event.id }}">
+                                    Register for this Event
+                                </button>
+                            </div>
+                            {% endif %}
+                        {% endif %}
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> Sign in to register for this event
+                    </div>
+                    <div class="d-grid">
+                        <button id="login-to-register-btn" class="btn btn-primary">
+                            <i class="fab fa-google me-2"></i> Sign in with Google
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if is_admin %}
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Admin Actions</h5>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('admin') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-edit me-2"></i> Edit Event
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Event Pass Modal -->
+<div class="modal fade" id="eventPassModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Event Pass</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="event-pass-content" data-event-id="{{ event.id }}" data-event-title="{{ event.title }}">
+                <div class="card border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Community Connect</span>
+                            <span>Event Pass</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <div class="display-6">{{ event.title }}</div>
+                            <div class="text-muted">
+                                {% set start_date = event.start|string|replace('T', ' ')|string %}
+                                {{ start_date[:16]|string }}
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="mb-3">
+                            <strong>Attendee:</strong> {{ user.name }}<br>
+                            <strong>Email:</strong> {{ user.email }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <strong>Location:</strong><br>
+                            {{ event.location }}<br>
+                            {{ event.address }}
+                        </div>
+                        
+                        <div class="text-center mt-4">
+                            <div id="qrcode-placeholder" style="width: 150px; height: 150px; background-color: #f8f9fa; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-qrcode fa-5x text-muted"></i>
+                            </div>
+                            <div class="mt-2 text-muted small">Pass ID: {{ event.id }}-{{ user.id }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="download-pass-btn">Download Pass</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Google Maps JavaScript API -->
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}" defer></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize map
+        function initializeMap() {
+            const lat = {{ event.lat }};
+            const lng = {{ event.lng }};
+            const location = { lat, lng };
+            
+            const map = new google.maps.Map(document.getElementById('map'), {
+                center: location,
+                zoom: 15
+            });
+            
+            // Add marker
+            const marker = new google.maps.Marker({
+                position: location,
+                map: map,
+                title: '{{ event.location }}'
+            });
+            
+            // Add info window
+            const infoWindow = new google.maps.InfoWindow({
+                content: `
+                    <div>
+                        <h6>{{ event.title }}</h6>
+                        <p>{{ event.location }}</p>
+                    </div>
+                `
+            });
+            
+            // Open info window when marker is clicked
+            marker.addListener('click', function() {
+                infoWindow.open(map, marker);
+            });
+        }
+        
+        // Wait for Maps API to load
+        google.maps.event.addDomListener(window, 'load', initializeMap);
+        
+        // Register for event
+        if (document.getElementById('register-btn')) {
+            document.getElementById('register-btn').addEventListener('click', function() {
+                const eventId = this.getAttribute('data-event-id');
+                
+                fetch(`/api/events/${eventId}/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Reload page to update UI
+                            window.location.reload();
+                        } else {
+                            alert('Failed to register: ' + (data.error || 'Unknown error'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error registering for event:', error);
+                        alert('Failed to register. Please try again.');
+                    });
+            });
+        }
+        
+        // Unregister from event
+        if (document.getElementById('unregister-btn')) {
+            document.getElementById('unregister-btn').addEventListener('click', function() {
+                if (!confirm('Are you sure you want to unregister from this event?')) {
+                    return;
+                }
+                
+                const eventId = this.getAttribute('data-event-id');
+                
+                fetch(`/api/events/${eventId}/unregister`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Reload page to update UI
+                            window.location.reload();
+                        } else {
+                            alert('Failed to unregister: ' + (data.error || 'Unknown error'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error unregistering from event:', error);
+                        alert('Failed to unregister. Please try again.');
+                    });
+            });
+        }
+        
+        // View event pass
+        if (document.getElementById('view-pass-btn')) {
+            document.getElementById('view-pass-btn').addEventListener('click', function() {
+                const modal = new bootstrap.Modal(document.getElementById('eventPassModal'));
+                modal.show();
+            });
+        }
+        
+        // Download event pass
+        document.getElementById('download-pass-btn').addEventListener('click', function() {
+            const content = document.getElementById('event-pass-content');
+            const eventId = content.getAttribute('data-event-id');
+            const eventTitle = content.getAttribute('data-event-title');
+            
+            // In a real app, you would implement a proper pass download
+            // Here we're just creating a simple text file
+            const passContent = `Community Connect Event Pass\n\n` +
+                               `Event: ${eventTitle}\n` +
+                               `Attendee: {{ user.name }}\n` +
+                               `Email: {{ user.email }}\n` +
+                               `Pass ID: ${eventId}-{{ user.id }}\n`;
+            
+            const blob = new Blob([passContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `event-pass-${eventId}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+        
+        // Login to register
+        if (document.getElementById('login-to-register-btn')) {
+            document.getElementById('login-to-register-btn').addEventListener('click', function() {
+                window.loginWithGoogle();
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,133 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Settings | Eventra Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Admin Settings</h1>
+    </div>
+
+    <!-- Settings Row -->
+    <div class="row">
+        <!-- System Settings Card -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">System Settings</h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="#">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="mb-3">
+                            <label class="form-label">Site Name</label>
+                            <input type="text" class="form-control" value="Eventra" disabled>
+                            <small class="text-muted">The name of your platform</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Default Event Image</label>
+                            <div class="input-group">
+                                <input type="file" class="form-control" disabled>
+                                <button class="btn btn-outline-secondary" type="button" disabled>Upload</button>
+                            </div>
+                            <small class="text-muted">Image shown for events without a custom image</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Event Creation</label>
+                            <select class="form-select" disabled>
+                                <option selected>All users can create events</option>
+                                <option>Only approved users can create events</option>
+                                <option>Only admins can create events</option>
+                            </select>
+                            <small class="text-muted">Who can create new events on the platform</small>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" checked disabled>
+                            <label class="form-check-label">Enable event registration</label>
+                            <small class="d-block text-muted">Allow users to register for events</small>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary" disabled>Save Settings</button>
+                            <small class="text-muted mt-2 text-center">Note: Settings are currently under development</small>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification Settings Card -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Notification Settings</h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="#">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" checked disabled>
+                            <label class="form-check-label">New user notifications</label>
+                            <small class="d-block text-muted">Notify admins when new users register</small>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" checked disabled>
+                            <label class="form-check-label">New event notifications</label>
+                            <small class="d-block text-muted">Notify admins when new events are created</small>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" checked disabled>
+                            <label class="form-check-label">Event reminder emails</label>
+                            <small class="d-block text-muted">Send reminders to users about upcoming events</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Reminder timing</label>
+                            <select class="form-select" disabled>
+                                <option>1 hour before</option>
+                                <option selected>24 hours before</option>
+                                <option>3 days before</option>
+                                <option>1 week before</option>
+                            </select>
+                            <small class="text-muted">When to send event reminders</small>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary" disabled>Save Notification Settings</button>
+                            <small class="text-muted mt-2 text-center">Note: Notification functionality is under development</small>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Integration Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">API Integrations</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Google Maps API</h5>
+                            <p class="card-text">Status: <span class="badge bg-success">Connected</span></p>
+                            <p class="small">Used for event location mapping and address autocomplete</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Google OAuth</h5>
+                            <p class="card-text">Status: <span class="badge bg-success">Connected</span></p>
+                            <p class="small">Used for user authentication with Google accounts</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <small class="d-block text-muted text-center mt-3">API keys and credentials are managed through environment variables</small>
+        </div>
+    </div>
+</div>
+{% endblock %}
